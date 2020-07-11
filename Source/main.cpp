@@ -2,6 +2,9 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <string>
+
+#include "Renderer/ShaderProgram.h"
 
 GLfloat Points[] = {
 	0.0f,0.5f,0.0f,
@@ -89,26 +92,16 @@ int main(void)
 	
 	glClearColor(1,1,0,1);
 	
-	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vs, 1, &vertex_shader,nullptr);
-	glCompileShader(vs);
-
-	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fs, 1, &fragment_shader, nullptr);
-	glCompileShader(fs);
-
-	GLuint ShaderProgram = glCreateProgram();
-	glAttachShader(ShaderProgram, vs);
-	glAttachShader(ShaderProgram, fs);
-	glLinkProgram(ShaderProgram);
-
-	glDeleteShader(vs);
-	glDeleteShader(fs);
+	std::string VertexShader(vertex_shader);
+	std::string FragmentShader(fragment_shader);
+	Renderer::ShaderProgram CurrShaderProgram(VertexShader, FragmentShader);
 
 	// Generate buffers
 	GLuint PointsVBO = 0;
 	glGenBuffers(1, &PointsVBO);
+	//set active buffer
 	glBindBuffer(GL_ARRAY_BUFFER, PointsVBO);
+	//load data from ram to gpu mem
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Points), Points, GL_STATIC_DRAW);
 
 	GLuint ColorsVBO = 0;
@@ -122,6 +115,7 @@ int main(void)
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, PointsVBO);
+	//link vertex data with shader
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
 	glEnableVertexAttribArray(1);
@@ -134,8 +128,9 @@ int main(void)
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(ShaderProgram);
+		CurrShaderProgram.Use();
 		glBindVertexArray(VAO);
+		// draw current vertex array object
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		/* Swap front and back buffers */
