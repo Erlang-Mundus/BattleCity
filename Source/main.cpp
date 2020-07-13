@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Renderer/ShaderProgram.h"
+#include "Resource/ResourceManager.h"
 
 GLfloat Points[] = {
 	0.0f,0.5f,0.0f,
@@ -17,24 +18,6 @@ GLfloat Colors[] = {
 	0.0f,1.0f,0.0f,
 	0.0f,0.0f,1.0f,
 };
-
-const char* vertex_shader =
-"#version 460\n"
-"layout(location = 0) in vec3 vertex_position;"
-"layout(location = 1) in vec3 vertex_color;"
-"out vec3 color;"
-"void main(){"
-"	color = vertex_color;"
-"	gl_Position = vec4(vertex_position, 1.0);"
-"}";
-
-const char* fragment_shader =
-"#version 460\n"
-"in vec3 color;"
-"out vec4 frag_color;"
-"void main(){"
-"	frag_color = vec4 (color, 1.0);"
-"}";
 
 int WindowSizeX = 640;
 int WindowSizeY = 480;
@@ -53,7 +36,7 @@ void glfwKeyCallback(GLFWwindow* Window, int key, int scancode, int action, int 
 	}
 }
 
-int main(void)
+int main(int argc, char**argv)
 {
 	/* Initialize the library */
 	if (!glfwInit())
@@ -91,53 +74,60 @@ int main(void)
 	std::cout<<"OpenGL version"<<glGetString(GL_VERSION)<<std::endl;
 	
 	glClearColor(1,1,0,1);
-	
-	std::string VertexShader(vertex_shader);
-	std::string FragmentShader(fragment_shader);
-	Renderer::ShaderProgram CurrShaderProgram(VertexShader, FragmentShader);
 
-	// Generate buffers
-	GLuint PointsVBO = 0;
-	glGenBuffers(1, &PointsVBO);
-	//set active buffer
-	glBindBuffer(GL_ARRAY_BUFFER, PointsVBO);
-	//load data from ram to gpu mem
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Points), Points, GL_STATIC_DRAW);
-
-	GLuint ColorsVBO = 0;
-	glGenBuffers(1, &ColorsVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, ColorsVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Colors), Colors, GL_STATIC_DRAW);
-
-	GLuint VAO = 0;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, PointsVBO);
-	//link vertex data with shader
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, ColorsVBO);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-	/* Loop until the user closes the window */
-	while (!glfwWindowShouldClose(window))
 	{
-		/* Render here */
-		glClear(GL_COLOR_BUFFER_BIT);
+		ResourceManager ResourceManager(argv[0]);
+		auto DefaultShaderProgram = ResourceManager.LoadShader("DefaultShader", "Content/Shader/VertexShader.txt", "Content/Shader/FragmentShader.txt");
 
-		CurrShaderProgram.Use();
+		if (!DefaultShaderProgram)
+		{
+			std::cout << "Cant load shader program" << std::endl;
+			return -1;
+		}
+
+		// Generate buffers
+		GLuint PointsVBO = 0;
+		glGenBuffers(1, &PointsVBO);
+		//set active buffer
+		glBindBuffer(GL_ARRAY_BUFFER, PointsVBO);
+		//load data from ram to gpu mem
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Points), Points, GL_STATIC_DRAW);
+
+		GLuint ColorsVBO = 0;
+		glGenBuffers(1, &ColorsVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, ColorsVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Colors), Colors, GL_STATIC_DRAW);
+
+		GLuint VAO = 0;
+		glGenVertexArrays(1, &VAO);
 		glBindVertexArray(VAO);
-		// draw current vertex array object
-		glDrawArrays(GL_TRIANGLES, 0, 3);
 
-		/* Swap front and back buffers */
-		glfwSwapBuffers(window);
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, PointsVBO);
+		//link vertex data with shader
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-		/* Poll for and process events */
-		glfwPollEvents();
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, ColorsVBO);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+		/* Loop until the user closes the window */
+		while (!glfwWindowShouldClose(window))
+		{
+			/* Render here */
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			DefaultShaderProgram->Use();
+			glBindVertexArray(VAO);
+			// draw current vertex array object
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+
+			/* Swap front and back buffers */
+			glfwSwapBuffers(window);
+
+			/* Poll for and process events */
+			glfwPollEvents();
+		}
 	}
 
 	glfwTerminate();

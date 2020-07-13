@@ -20,7 +20,7 @@ namespace Renderer
 		ShaderProgram& operator =(ShaderProgram&&ShaderProgram) noexcept;
 		ShaderProgram(ShaderProgram&&ShaderProgram) noexcept;
 	private:
-		bool CreateShader(const std::string &Source, const GLenum ShaderType, GLuint &ShaderID);
+		bool CreateShader(const std::string & Source, const GLenum ShaderType, GLuint & ShaderID);
 		bool bIsCompiled = false;
 		GLuint ID = 0;
 	};

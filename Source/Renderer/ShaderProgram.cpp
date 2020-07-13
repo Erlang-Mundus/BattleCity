@@ -51,16 +51,20 @@ namespace Renderer
 	bool ShaderProgram::CreateShader(const std::string & Source, const GLenum ShaderType, GLuint & ShaderID)
 	{
 		ShaderID = glCreateShader(ShaderType);
-		const char* code = Source.c_str();
-		glShaderSource(ShaderID, 1, &code, nullptr);
+		const char* Code = Source.c_str();
+
+		glShaderSource(ShaderID, 1, &Code, nullptr);
 		glCompileShader(ShaderID);
 
-		GLuint Success;
-		//glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &Success);
-		//if (!Success)
-		//{
-
-		//}
+		GLint success;
+		glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &success);
+		if (!success)
+		{
+			GLchar infoLog[1024];
+			glGetShaderInfoLog(ShaderID, 1024, nullptr, infoLog);
+			std::cerr << "ERROR::SHADER: Compile-time error:\n" << infoLog << std::endl;
+			return false;
+		}
 		return true;
 	}
 
